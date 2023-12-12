@@ -3,6 +3,7 @@ import Dropzone from 'react-dropzone'
 import { useKeycloak } from '@react-keycloak/web'
 import useAxios from '../hooks/useAxios'
 import Loading from '../components/Loading'
+import Error from '../components/Error'
 import axios from 'axios'
 
 const Upload = () => {
@@ -11,22 +12,31 @@ const Upload = () => {
   const axiosInstance = useAxios().current
     
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(false)
   const [filesToUpload, setFilesToUpload] = useState([])
 
   const handleSubmit = async () => {
-    setLoading(true)
+    try {
+      setLoading(true)
 
-    const putUrlResponse = await axiosInstance.get('/uploaded-vin-records/get_minio_put_url')
-    const putUrl = putUrlResponse.data.url
-    const object_name = putUrlResponse.data.object_name
+      const putUrlResponse = await axiosInstance.get('/uploaded-vin-records/get_minio_put_url')
+      const putUrl = putUrlResponse.data.url
+      const object_name = putUrlResponse.data.object_name
 
-    await axios.put(putUrl, filesToUpload[0])
-    await axiosInstance.post('/uploaded-vin-records/load_data', {
-      object_name
-    })
+      await axios.put(putUrl, filesToUpload[0])
+      await axiosInstance.post('/uploaded-vin-records/load_data', {
+        object_name
+      })
 
-    setFilesToUpload([])
-    setLoading(false)
+      setFilesToUpload([])
+      setLoading(false)
+    } catch (error) {
+      setError(true)
+    }
+  }
+
+  if (error) {
+    return <Error/>
   }
 
   if (loading) {

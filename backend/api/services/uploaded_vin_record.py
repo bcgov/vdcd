@@ -1,6 +1,7 @@
 import pandas as pd
 from api.models import UploadedVinRecord
 from django.db import transaction
+from django.utils import timezone
 
 
 @transaction.atomic
@@ -21,6 +22,7 @@ def parse_and_save(file):
         vin_record.model_year = vin_map[vin_record.vin] if vin_map[vin_record.vin] != "" else None
         vin_record.current_decode_successful = False
         vin_record.number_of_current_decode_attempts = 0
+        vin_record.modified = timezone.now()
         uploaded_records_to_update.append(vin_record)
 
     vins_to_insert = vins.difference(vins_to_update)
