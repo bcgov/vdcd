@@ -1,8 +1,8 @@
 import React from 'react'
-import { useKeycloak } from '@react-keycloak/web'
+import useKeycloak from '../hooks/useKeycloak'
 
 const Login = () => {
-  const { keycloak } = useKeycloak()
+  const keycloak = useKeycloak()
   const redirectUri = `${window.location.origin}/upload`
   return (
     <div>

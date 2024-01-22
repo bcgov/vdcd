@@ -1,15 +1,15 @@
 import React, { useState } from 'react'
 import Dropzone from 'react-dropzone'
-import { useKeycloak } from '@react-keycloak/web'
+import useKeycloak from '../hooks/useKeycloak'
 import useAxios from '../hooks/useAxios'
 import Loading from '../components/Loading'
 import Error from '../components/Error'
-import axios from 'axios'
 
 const Upload = () => {
-  const { keycloak } = useKeycloak()
+  const keycloak = useKeycloak()
   const redirectUri = `${window.location.origin}/`
-  const axiosInstance = useAxios().current
+  const axios = useAxios()
+  const axiosDefault = useAxios(true)
     
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(false)
@@ -19,12 +19,12 @@ const Upload = () => {
     try {
       setLoading(true)
 
-      const putUrlResponse = await axiosInstance.get('/uploaded-vin-records/get_minio_put_url')
+      const putUrlResponse = await axios.get('/uploaded-vin-records/get_minio_put_url')
       const putUrl = putUrlResponse.data.url
       const object_name = putUrlResponse.data.object_name
 
-      await axios.put(putUrl, filesToUpload[0])
-      await axiosInstance.post('/uploaded-vin-records/load_data', {
+      await axiosDefault.put(putUrl, filesToUpload[0])
+      await axios.post('/uploaded-vin-records/load_data', {
         object_name
       })
 

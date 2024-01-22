@@ -1,11 +1,11 @@
 import React from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { useKeycloak } from '@react-keycloak/web'
+import useKeycloak from './hooks/useKeycloak'
 import Login from './pages/Login'
 import Upload from './pages/Upload'
 
 const RequireAuth = ({ children, redirectTo }) => {
-  const { keycloak } = useKeycloak()
+  const keycloak = useKeycloak()
   return keycloak.authenticated ? children : <Navigate to={redirectTo} />
 }
 

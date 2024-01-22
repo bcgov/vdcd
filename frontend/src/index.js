@@ -1,7 +1,7 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import Keycloak from 'keycloak-js'
-import { ReactKeycloakProvider } from '@react-keycloak/web'
+import KeycloakProvider from './components/KeycloakProvider'
 import {
   KEYCLOAK_CLIENT_ID,
   KEYCLOAK_REALM,
@@ -23,11 +23,11 @@ const keycloakInitOptions = {
 
 const root = ReactDOM.createRoot(document.getElementById('root'))
 root.render(
-  <ReactKeycloakProvider
+  <KeycloakProvider
     authClient={keycloak}
     initOptions={keycloakInitOptions}
-    LoadingComponent={<Loading/>}
+    LoadingComponent={Loading}
   >
     <AppRouter/>
-  </ReactKeycloakProvider>
+  </KeycloakProvider>
 )
