@@ -5,8 +5,8 @@ from django.db.models import (
     BooleanField,
     OneToOneField,
     IntegerField,
+    JSONField,
     CASCADE,
-    Model,
 )
 from django.utils.translation import gettext_lazy as _
 
@@ -35,33 +35,27 @@ class UploadedVinRecord(TimeStampedModel):
 
     model_year = CharField(max_length=4, null=True)
 
-    current_decode_successful = BooleanField(default=False)
+    vpic_current_decode_successful = BooleanField(default=False)
 
-    number_of_current_decode_attempts = IntegerField(default=0)
+    vpic_number_of_current_decode_attempts = IntegerField(default=0)
+
+    vinpower_current_decode_successful = BooleanField(default=False)
+
+    vinpower_number_of_current_decode_attempts = IntegerField(default=0)
 
 
 class DecodedVinRecord(TimeStampedModel):
     vin = CharField(max_length=17, unique=True)
 
-    make = CharField(null=True, max_length=250)
-
-    model = CharField(null=True, max_length=250)
-
-    model_year = CharField(null=True, max_length=4)
-
-
-class FieldPair(Model):
-    external_field_name = CharField(null=True, max_length=250, unique=True)
-
-    internal_field_name = CharField(null=True, max_length=250, unique=True)
+    data = JSONField()
 
     class Meta:
         abstract = True
 
 
-class VpicFieldPair(FieldPair):
+class VpicDecodedVinRecord(DecodedVinRecord):
     pass
 
 
-class VinpowerFieldPair(FieldPair):
+class VinpowerDecodedVinRecord(DecodedVinRecord):
     pass

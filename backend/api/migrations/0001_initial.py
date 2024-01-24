@@ -26,22 +26,6 @@ class Migration(migrations.Migration):
             },
         ),
         migrations.CreateModel(
-            name='DecodedVinRecord',
-            fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('created', django_extensions.db.fields.CreationDateTimeField(auto_now_add=True, verbose_name='created')),
-                ('modified', django_extensions.db.fields.ModificationDateTimeField(auto_now=True, verbose_name='modified')),
-                ('vin', models.CharField(max_length=17, unique=True)),
-                ('make', models.CharField(max_length=250, null=True)),
-                ('model', models.CharField(max_length=250, null=True)),
-                ('model_year', models.CharField(max_length=4, null=True)),
-            ],
-            options={
-                'get_latest_by': 'modified',
-                'abstract': False,
-            },
-        ),
-        migrations.CreateModel(
             name='UploadedVinRecord',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
@@ -49,8 +33,10 @@ class Migration(migrations.Migration):
                 ('modified', django_extensions.db.fields.ModificationDateTimeField(auto_now=True, verbose_name='modified')),
                 ('vin', models.CharField(max_length=17, unique=True)),
                 ('model_year', models.CharField(max_length=4, null=True)),
-                ('current_decode_successful', models.BooleanField(default=False)),
-                ('number_of_current_decode_attempts', models.IntegerField(default=0)),
+                ('vpic_current_decode_successful', models.BooleanField(default=False)),
+                ('vpic_number_of_current_decode_attempts', models.IntegerField(default=0)),
+                ('vinpower_current_decode_successful', models.BooleanField(default=False)),
+                ('vinpower_number_of_current_decode_attempts', models.IntegerField(default=0)),
             ],
             options={
                 'get_latest_by': 'modified',
@@ -58,22 +44,26 @@ class Migration(migrations.Migration):
             },
         ),
         migrations.CreateModel(
-            name='VinpowerFieldPair',
+            name='VinpowerDecodedVinRecord',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('external_field_name', models.CharField(max_length=250, null=True, unique=True)),
-                ('internal_field_name', models.CharField(max_length=250, null=True, unique=True)),
+                ('created', django_extensions.db.fields.CreationDateTimeField(auto_now_add=True, verbose_name='created')),
+                ('modified', django_extensions.db.fields.ModificationDateTimeField(auto_now=True, verbose_name='modified')),
+                ('vin', models.CharField(max_length=17, unique=True)),
+                ('data', models.JSONField()),
             ],
             options={
                 'abstract': False,
             },
         ),
         migrations.CreateModel(
-            name='VpicFieldPair',
+            name='VpicDecodedVinRecord',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('external_field_name', models.CharField(max_length=250, null=True, unique=True)),
-                ('internal_field_name', models.CharField(max_length=250, null=True, unique=True)),
+                ('created', django_extensions.db.fields.CreationDateTimeField(auto_now_add=True, verbose_name='created')),
+                ('modified', django_extensions.db.fields.ModificationDateTimeField(auto_now=True, verbose_name='modified')),
+                ('vin', models.CharField(max_length=17, unique=True)),
+                ('data', models.JSONField()),
             ],
             options={
                 'abstract': False,

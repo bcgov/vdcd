@@ -9,7 +9,7 @@ def add_frontend_app_user(apps, schema_editor):
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("api", "0002_add_vpic_field_pairs"),
+        ("api", "0001_initial"),
     ]
 
     operations = [

@@ -18,8 +18,8 @@ def schedule_batch_decode_vins():
     try:
         schedule(
             "workers.tasks.batch_decode_vins",
-            50,
             "vpic",
+            50,
             name="batch_decode_vins",
             schedule_type="C",
             cron="* * * * *",
