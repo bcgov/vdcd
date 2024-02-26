@@ -10,7 +10,7 @@ Authorized apps can call certain endpoints to get decoded VIN data. To authorize
 create_app_user_and_token <app_name>
 ```
 
-Then, the app can use the token via the Authorization header: 
+Then, the app can use the token via the Authorization header of an HTTP request: 
 
 ```sh
 Token <token>
