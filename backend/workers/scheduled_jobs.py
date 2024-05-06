@@ -14,6 +14,19 @@ def schedule_create_minio_bucket():
         pass
 
 
+def schedule_read_uploaded_vins_file():
+    try:
+        schedule(
+            "workers.tasks.read_uploaded_vins_file",
+            name="read_uploaded_vins_file",
+            schedule_type="C",
+            cron="*/15 * * * *",
+            q_options={"timeout": 660, "ack_failure": True},
+        )
+    except IntegrityError:
+        pass
+
+
 def schedule_batch_decode_vins():
     try:
         schedule(

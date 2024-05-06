@@ -24,7 +24,7 @@ const Upload = () => {
       const object_name = putUrlResponse.data.object_name
 
       await axiosDefault.put(putUrl, filesToUpload[0])
-      await axios.post('/uploaded-vin-records/load_data', {
+      await axios.post('/uploaded-vin-records/create_file_record', {
         object_name
       })
 

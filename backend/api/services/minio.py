@@ -24,10 +24,6 @@ def get_minio_put_url(object_name):
 def get_minio_object(object_name):
     try:
         client = get_minio_client()
-        response = client.get_object(settings.MINIO_BUCKET_NAME, object_name)
-        return response.data
+        return client.get_object(settings.MINIO_BUCKET_NAME, object_name)
     except:
         raise
-    finally:
-        response.close()
-        response.release_conn()

@@ -1,10 +1,13 @@
 from django.conf import settings
 from api.services.minio import get_minio_client
 from func_timeout import func_timeout, FunctionTimedOut
-from api.models import UploadedVinRecord
+from api.models import UploadedVinsFile, UploadedVinRecord
 from api.constants import get_service
 from api.utilities.generic import get_map
 from api.services.decoded_vin_record import save_decoded_data
+from api.services.minio import get_minio_object
+from api.services.uploaded_vin_record import parse_and_save
+from django.db import transaction
 
 
 def create_minio_bucket():
@@ -13,6 +16,36 @@ def create_minio_bucket():
     found = client.bucket_exists(bucket_name)
     if not found:
         client.make_bucket(bucket_name)
+
+
+def read_uploaded_vins_file():
+    # TODO: this job will probably have to become more involved; it currently just uploads whatever is in the file while skipping records
+    # that encounter uniqueness conflicts.
+    # we'll probably have to do an initial, chunked read from the
+    # file in order to build a map of (vin, postal_code) -> (record chunk index, record index within chunk) of unique records (based on snapshot_date?),
+    # then we'll have to compare the (vin, postal_code) keys to existing records in the database, and
+    # determine which ones need to get bulk-inserted, and which ones bulk-updated.
+    # also have to keep in mind the memory used by any data structures we use
+    @transaction.atomic
+    def inner(vins_file, file_response):
+        if vins_file is not None and file_response is not None:
+            parse_and_save(vins_file, file_response)
+
+    file_response = None
+    vins_file = (
+        UploadedVinsFile.objects.filter(processed=False).order_by("created").first()
+    )
+    if vins_file is not None:
+        file_response = get_minio_object(vins_file.filename)
+    try:
+        func_timeout(600, inner, args=(vins_file, file_response))
+    except FunctionTimedOut:
+        print("reading vins file job timed out")
+        raise Exception
+    finally:
+        if file_response is not None:
+            file_response.close()
+            file_response.release_conn()
 
 
 def batch_decode_vins(service_name, batch_size=50):

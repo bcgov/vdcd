@@ -7,6 +7,7 @@ from django.db.models import (
     IntegerField,
     JSONField,
     CASCADE,
+    UniqueConstraint,
 )
 from django.utils.translation import gettext_lazy as _
 
@@ -30,10 +31,24 @@ class AppToken(Token):
     )
 
 
-class UploadedVinRecord(TimeStampedModel):
-    vin = CharField(max_length=17, unique=True)
+class UploadedVinsFile(TimeStampedModel):
+    filename = CharField(max_length=32, unique=True)
 
-    model_year = CharField(max_length=4, null=True)
+    chunk_size = IntegerField(default=25000)
+
+    chunks_per_run = IntegerField(default=4)
+
+    start_index = IntegerField(default=0)
+
+    processed = BooleanField(default=False)
+
+
+class UploadedVinRecord(TimeStampedModel):
+    vin = CharField(max_length=17)
+
+    postal_code = CharField(max_length=7, null=True, blank=True)
+
+    data = JSONField()
 
     vpic_current_decode_successful = BooleanField(default=False)
 
@@ -42,6 +57,13 @@ class UploadedVinRecord(TimeStampedModel):
     vinpower_current_decode_successful = BooleanField(default=False)
 
     vinpower_number_of_current_decode_attempts = IntegerField(default=0)
+
+    class Meta:
+        constraints = [
+            UniqueConstraint(
+                fields=["vin", "postal_code"], name="unique_vin_postal_code"
+            )
+        ]
 
 
 class DecodedVinRecord(TimeStampedModel):

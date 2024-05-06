@@ -1,56 +1,51 @@
 import pandas as pd
 from api.models import UploadedVinRecord
-from api.constants import SERVICES, get_service
-from django.db import transaction
-from django.utils import timezone
+from api.constants import get_service
 
 
-@transaction.atomic
-def parse_and_save(file):
-    vin_map = {}
-    df = pd.read_excel(file)
+def parse_and_save(uploaded_vins_file, file_response):
+    processed = True
+    number_of_chunks_processed = 0
+    number_of_chunks_to_process = uploaded_vins_file.chunks_per_run
+    chunksize = uploaded_vins_file.chunk_size
+    start_index = uploaded_vins_file.start_index
+    chunks = pd.read_csv(file_response, sep="|", chunksize=chunksize)
+
+    for idx, chunk in enumerate(chunks):
+        if (
+            idx >= start_index
+            and number_of_chunks_processed < number_of_chunks_to_process
+        ):
+            vin_records_to_insert = get_vin_records_to_insert(chunk)
+            UploadedVinRecord.objects.bulk_create(
+                vin_records_to_insert,
+                ignore_conflicts=True,
+            )
+            number_of_chunks_processed = number_of_chunks_processed + 1
+        elif idx >= start_index + number_of_chunks_processed:
+            processed = False
+            break
+
+    new_start_index = start_index + number_of_chunks_processed
+    uploaded_vins_file.processed = processed
+    uploaded_vins_file.start_index = new_start_index
+    uploaded_vins_file.save()
+
+
+def get_vin_records_to_insert(df):
+    result = []
     df.fillna("", inplace=True)
     for _, row in df.iterrows():
-        if row["VIN"] != "":
-            vin_map[row["VIN"]] = row["Model Year"]
-
-    vins = set(vin_map.keys())
-    already_uploaded_vin_records = UploadedVinRecord.objects.filter(vin__in=vins)
-    vins_to_update = set()
-    uploaded_records_to_update = []
-    for vin_record in already_uploaded_vin_records:
-        vins_to_update.add(vin_record.vin)
-        vin_record.model_year = (
-            vin_map[vin_record.vin] if vin_map[vin_record.vin] != "" else None
-        )
-        vin_record.modified = timezone.now()
-        for service in SERVICES:
-            setattr(vin_record, service.CURRENT_DECODE_SUCCESSFUL.value, False)
-            setattr(vin_record, service.NUMBER_OF_CURRENT_DECODE_ATTEMPTS.value, 0)
-        uploaded_records_to_update.append(vin_record)
-
-    vins_to_insert = vins.difference(vins_to_update)
-    uploaded_records_to_insert = []
-
-    service_kwargs = {}
-    for service in SERVICES:
-        service_kwargs[service.CURRENT_DECODE_SUCCESSFUL.value] = False
-        service_kwargs[service.NUMBER_OF_CURRENT_DECODE_ATTEMPTS.value] = 0
-    for vin in vins_to_insert:
-        uploaded_records_to_insert.append(
-            UploadedVinRecord(
-                vin=vin,
-                model_year=vin_map[vin] if vin_map[vin] != "" else None,
-                **service_kwargs
+        if row["vin"] != "":
+            vin = row["vin"]
+            postal_code = row["postal_code"]
+            data = row.to_dict()
+            del data["vin"]
+            del data["postal_code"]
+            result.append(
+                UploadedVinRecord(vin=vin, postal_code=postal_code, data=data)
             )
-        )
-
-    update_fields = ["modified", "model_year"]
-    for service in SERVICES:
-        update_fields.append(service.CURRENT_DECODE_SUCCESSFUL.value)
-        update_fields.append(service.NUMBER_OF_CURRENT_DECODE_ATTEMPTS.value)
-    UploadedVinRecord.objects.bulk_update(uploaded_records_to_update, update_fields)
-    UploadedVinRecord.objects.bulk_create(uploaded_records_to_insert)
+    return result
 
 
 def get_decode_successful(service_name, uploaded_record):
